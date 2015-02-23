@@ -222,6 +222,7 @@
 
 #define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
+#define CONFIG_CMD_EXT2
 
 /* QSPI */
 #ifdef CONFIG_QSPI_BOOT
