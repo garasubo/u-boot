@@ -410,4 +410,6 @@
 #define CONFIG_CMD_BLOB
 #endif
 
+#define CONFIG_STANDALONE_LOAD_ADDR 0x82000000
+
 #endif
