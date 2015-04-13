@@ -54,16 +54,23 @@
 fiq_entry:
 	push {r2-r3}
 	ldr r2, =GICC_IAR 
-	ldr r3, [r2]
-	add r0, r0, #1
+	ldr r0, [r2]
+
+	ldr r2, =0xffffffff
+	ldr r3, =0xffffffff
+	mcrr p15, 2, r2, r3, c14
+	mov r2, #0x2
+	mcr p15, 0, r2, c14, c2, 1
+
 	ldr r2, =GICC_EOIR
-	str r3, [r2]
+	str r0, [r2]
 	pop {r2-r3}
 	subs pc, lr, #4
 	.global gic
 gic:
 	push {r4}
 	cpsid aif
+	mrc p15, 0, r0, c14, c0, 0
 	mov r0, #0
 	ldr r1, =GICC_PMR
 	ldr r2, =0xff-7
@@ -101,18 +108,20 @@ gic_pri_loop:
 	mcr	p15, 0, ip, cr12, cr0, 0
 	cpsie aif
 
-	ldr ip, =GICD_SPENDSGIR(0)
-	ldr r2, =0x01
-	ldr r3, =GICD_SPENDSGIR(4)
-gic_sgir_loop:
-	strb r2, [ip]
-	add ip, ip, #1
-	cmp ip, r3
-	blt gic_sgir_loop
-	
+	mrrc p15, 0, r0, r1, c14
+	ldr r2, =0x100000
+	adds r0, r0, r2
+	adc r1, r1, #0
+	mcrr p15, 2, r0, r1, c14
+	mov r0, #0
+	mov ip, #0x5
+	mcr p15, 0, ip, c14, c2, 1
+
 	mov r1, #1
 gic_wait_loop:
 	cmp r1, #0
+	mrrc p15, 0, r2, r3, c14
+
 	beq gic_end
 	add r1, r1, #1
 	cmp r0, #0
@@ -120,6 +129,7 @@ gic_wait_loop:
 	beq gic_wait_loop
 
 gic_end:
+	cpsid aif
 	mcr p15, 0, r4, cr12, cr0, 0
 	pop {r4}
 	bx lr
